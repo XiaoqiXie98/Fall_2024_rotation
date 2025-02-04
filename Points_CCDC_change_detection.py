@@ -44,8 +44,8 @@ for q in range(points.shape[0]):
 
     except Exception as e:
         continue  # Skip to the next iteration of the loop
-coords_with_change=pd.concat(coords_with_change)
-coords_without_change=pd.concat(coords_without_change)
-coords_with_change.to_csv(os.path.join(script_dir,'coords_with_change_100.csv'))
-coords_without_change.to_csv(os.path.join(script_dir,'coords_without_change_100.csv'))
+coords_with_change_df = pd.DataFrame(coords_with_change, columns=['Longitude', 'Latitude'])
+coords_without_change_df = pd.DataFrame(coords_without_change, columns=['Longitude', 'Latitude'])
+coords_with_change_df.to_csv(os.path.join(script_dir, 'coords_with_change_100.csv'), index=False)
+coords_without_change_df.to_csv(os.path.join(script_dir, 'coords_without_change_100.csv'), index=False)
 
