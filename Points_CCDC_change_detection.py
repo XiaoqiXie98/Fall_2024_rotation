@@ -1,6 +1,6 @@
 """Look for points with change of CCDC estimates and without change."""
 import ee
-ee.Initialize(project="ee-xiaoqixie98n")
+ee.Initialize(project="")
 from lib.utils.ee.ccdc_utils import get_segments_for_coordinates
 import os 
 import pandas as pd
