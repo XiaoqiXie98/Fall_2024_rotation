@@ -4,6 +4,7 @@ import os
 import json
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 script_directory=os.getcwd()
 
 common_path=os.path.join(script_directory,'tests','kalman','Americas',
@@ -35,38 +36,60 @@ def RMSE(v1,v2):
     v=np.sqrt(np.mean((v1-v2)**2))
     return(v)
 
+os.makedirs(os.path.join(script_directory,'coords_without_segments'),exist_ok=True)
 #estimate rmse for each point
 rmse=[]
 for i in range(len(data)):
     d=data[i]
     t=d.loc[d['z']!=0,:]
     if not t.empty:
-        d=d.loc[d['z']!=0,:]
-        coord=d[['longitude', 'latitude']].drop_duplicates()
+        d1=d.loc[d['z']!=0,:]
+        coord=d1[['longitude', 'latitude']].drop_duplicates()
+        plt.figure(figsize=(12,8))
+        plt.plot(d1['frac_of_year'], d1['z'], label='Z', linestyle='-', marker='o', alpha=0.7)
+        plt.plot(d['frac_of_year'], d['ccdc_fit'], label='CCDC Fit', linestyle='--', alpha=0.7)
+        plt.plot(d1['frac_of_year'], d1['estimate_predicted'], label='Estimate Predicted', linestyle='-.', marker='^', alpha=0.7)
+
+        plt.xlabel('Fraction of Year')
+        plt.ylabel('Values')
+        plt.title('Comparison of Z, CCDC Fit, and Estimate Predicted Over Time')
+        plt.legend()
+        plt.savefig(os.path.join(script_directory,'coords_without_segments',f'{coord.values}.png'),bbox_inches='tight')
         print(i,coord)
-        rmse_ccdc = RMSE(d['ccdc_fit'].to_numpy(), d['z'].to_numpy())
-        rmse_kf = RMSE(d['estimate_predicted'].to_numpy(), d['z'].to_numpy())    
+        rmse_ccdc = RMSE(d1['ccdc_fit'].to_numpy(), d1['z'].to_numpy())
+        rmse_kf = RMSE(d1['estimate_predicted'].to_numpy(), d1['z'].to_numpy())    
         rmse_diff=rmse_kf-rmse_ccdc
-        detections=d.shape[0]
-        d1={'longitude':coord.iloc[0,0],'latitude':coord.iloc[0,1],'rmse_ccdc':rmse_ccdc,
+        detections=d1.shape[0]
+        d2={'longitude':coord.iloc[0,0],'latitude':coord.iloc[0,1],'rmse_ccdc':rmse_ccdc,
             'rmse_kf':rmse_kf,
             'rmse_diff_kf_minus_ccdc':rmse_diff,'detections':detections}
     else:
         coord=d[['longitude', 'latitude']].drop_duplicates()
+        plt.figure(figsize=(12,8))
+        plt.plot(d['frac_of_year'], d['z'], label='Z', linestyle='-', marker='o', alpha=0.7)
+        plt.plot(d['frac_of_year'], d['ccdc_fit'], label='CCDC Fit', linestyle='--', marker='s', alpha=0.7)
+        plt.plot(d['frac_of_year'], d['estimate_predicted'], label='Estimate Predicted', linestyle='-.', marker='^', alpha=0.7)
+
+        plt.xlabel('Fraction of Year')
+        plt.ylabel('Values')
+        plt.title('Comparison of Z, CCDC Fit, and Estimate Predicted Over Time')
+        plt.legend()
+        plt.savefig(os.path.join(script_directory,'coords_without_segments',f'{coord.values}.png'),bbox_inches='tight')
+
         print(i,coord)
         rmse_ccdc = RMSE(d['ccdc_fit'].to_numpy(), d['z'].to_numpy())
         rmse_kf = RMSE(d['estimate_predicted'].to_numpy(), d['z'].to_numpy())    
         rmse_diff=rmse_kf-rmse_ccdc
         detections=d.shape[0]
-        d1={'longitude':coord.iloc[0,0],'latitude':coord.iloc[0,1],'rmse_ccdc':rmse_ccdc,
+        d2={'longitude':coord.iloc[0,0],'latitude':coord.iloc[0,1],'rmse_ccdc':rmse_ccdc,
             'rmse_kf':rmse_kf,
             'rmse_diff_kf_minus_ccdc':rmse_diff,'detections':detections}
-    rmse.append(d1)
+    rmse.append(d2)
 
 rmse=pd.DataFrame(rmse)
 rmse.to_csv(os.path.join(script_directory,'rmse_coords_without_change_100.csv'),index=False)
 
-#look for ccdc rsme at 24,25,26, 49,50,52, 74,75,76 percentiles
+look for ccdc rsme at 24,25,26, 49,50,52, 74,75,76 percentiles
 percentiles = [24, 25, 26, 49, 50, 52, 74, 75, 76]
 position=np.array(percentiles)-1
 rmse_sorted = rmse.sort_values(by='rmse_ccdc', ascending=True)
